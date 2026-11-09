@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Sonar</title>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1b1d1f; --muted: #686d73; --line: #e2e0d9;
+  --accent: #0f6b5c; --accent-soft: #e1f0ec; --warn: #9a5b00; --warn-soft: #fbefd9;
+  --bad: #a23a2c; --chip: #efede7;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141617; --panel: #1d2022; --ink: #e9e7e2; --muted: #9ba1a6; --line: #2e3235;
+    --accent: #5cc5ae; --accent-soft: #1d3a34; --warn: #e0a64a; --warn-soft: #3a2e1a;
+    --bad: #e07b6c; --chip: #2a2e31;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+header { padding: 20px 16px 8px; max-width: 1100px; margin: 0 auto; }
+h1 { margin: 0; font-size: 22px; letter-spacing: -0.01em; }
+.sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.bar { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line); }
+.controls { max-width: 1100px; margin: 0 auto; padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+input[type=search], select { font: inherit; font-size: 14px; padding: 6px 10px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--panel); color: var(--ink); }
+input[type=search] { flex: 1 1 200px; min-width: 0; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tab { font: inherit; font-size: 13px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); cursor: pointer; }
+.tab[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+main { max-width: 1100px; margin: 0 auto; padding: 12px 16px 60px; }
+.count { color: var(--muted); font-size: 13px; margin: 4px 0 12px; }
+.job { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+  display: grid; grid-template-columns: 56px 1fr; gap: 14px; }
+.score { width: 56px; height: 56px; border-radius: 12px; display: grid; place-items: center; font-weight: 700; font-size: 19px;
+  background: var(--chip); }
+.score.hi { background: var(--accent-soft); color: var(--accent); }
+.title { font-weight: 650; font-size: 16px; margin: 0; }
+.title a { color: inherit; text-decoration: none; }
+.title a:hover { text-decoration: underline; }
+.meta { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--chip); }
+.chip.lane { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.chip.pay-ok { background: var(--accent-soft); color: var(--accent); }
+.chip.pen { background: var(--warn-soft); color: var(--warn); }
+.chip.new { background: var(--ink); color: var(--bg); font-weight: 600; }
+details { margin-top: 8px; font-size: 14px; }
+summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+details ul { margin: 6px 0; padding-left: 18px; }
+.gap { color: var(--warn); }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+.btn { font: inherit; font-size: 13px; padding: 5px 11px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); cursor: pointer; text-decoration: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn[aria-pressed=true] { outline: 2px solid var(--accent); outline-offset: -1px; font-weight: 600; }
+.status { font-size: 12px; color: var(--muted); margin-left: auto; }
+.empty { color: var(--muted); padding: 40px 0; text-align: center; }
+@media (max-width: 560px) {
+  .job { grid-template-columns: 1fr; gap: 8px; }
+  .score { width: auto; height: auto; padding: 4px 10px; justify-self: start; font-size: 15px; }
+  .status { margin-left: 0; width: 100%; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Job Sonar</h1>
+  <div class="sub" id="sub">Loading…</div>
+</header>
+<div class="bar"><div class="controls">
+  <div class="tabs" id="tabs"></div>
+  <input type="search" id="q" placeholder="Search title, company, edge…">
+  <select id="lane"><option value="">All lanes</option><option value="AC">AC · Paid + CRM</option>
+    <option value="A">A · Paid media</option><option value="C">C · CRM</option>
+    <option value="D">D · Dev/AI for marketing</option></select>
+  <select id="track"><option value="">All tracks</option><option value="pub">Publicidade (agency + paid media)</option>
+    <option value="pubbr">Publicidade · Brasil/PT only</option><option value="agency">Agency only</option></select>
+  <select id="industry"><option value="">All industries</option></select>
+  <select id="kind"><option value="">Any type</option><option>Full-time</option><option>Contract</option><option>Part-time</option></select>
+  <select id="pay"><option value="">Any pay</option><option value="ok">Posted, ≥ floor</option><option value="none">Not posted</option></select>
+  <select id="source"><option value="">All sources</option></select>
+  <select id="sort"><option value="score">Sort: best fit</option><option value="pay">Sort: highest pay</option>
+    <option value="fresh">Sort: newest</option></select>
+</div></div>
+<main>
+  <div class="count" id="count"></div>
+  <div id="list"></div>
+</main>
+<script>
+const TABS = [["open", "Open"], ["new", "New today"], ["upwork", "Upwork"], ["saved", "Saved"], ["applied", "Applied"],
+  ["interview", "Interview"], ["offer", "Offer"], ["hidden", "Hidden"]];
+const ACTIONS = [["saved", "Save"], ["applied", "Applied"], ["interview", "Interview"], ["offer", "Offer"], ["hidden", "Hide"]];
+let DATA = { jobs: [] }, tab = "open";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const today = new Date().toISOString().slice(0, 10);
+
+function ago(iso) {
+  if (!iso) return "date unknown";
+  const h = (Date.now() - new Date(iso)) / 36e5;
+  return h < 48 ? `${Math.max(1, Math.round(h))}h ago` : `${Math.round(h / 24)}d ago`;
+}
+
+function inTab(j) {
+  if (tab === "open") return !j.gone && !["applied", "interview", "offer", "hidden"].includes(j.status);
+  if (tab === "new") return !j.gone && j.first_seen === today && !j.status;
+  if (tab === "upwork") return j.upwork && !["applied", "interview", "offer", "hidden"].includes(j.status);
+  return j.status === tab;
+}
+
+function filtered() {
+  const q = $("q").value.toLowerCase(), lane = $("lane").value, ind = $("industry").value,
+    kind = $("kind").value, pay = $("pay").value, src = $("source").value, track = $("track").value;
+  let rows = DATA.jobs.filter(j => inTab(j)
+    && (!q || [j.title, j.company, j.location, j.industry, ...(j.edges || [])].join(" ").toLowerCase().includes(q))
+    && (!lane || j.lane === lane) && (!ind || j.industry === ind) && (!kind || j.kind === kind)
+    && (!src || j.source === src)
+    && (!track || (track === "pub" ? j.publicidade : track === "pubbr" ? j.publicidade && j.br : j.agency))
+    && (!pay || (pay === "ok" ? j.pay_brl_month && j.pay_brl_month[1] >= DATA.floor : !j.pay_brl_month)));
+  const s = $("sort").value;
+  const key = s === "pay" ? j => (j.pay_brl_month ? j.pay_brl_month[1] : -1)
+    : s === "fresh" ? j => (j.published ? Date.parse(j.published) : 0) : j => j.score ?? -1;
+  return rows.sort((a, b) => key(b) - key(a));
+}
+
+function upworkCard(j) {
+  const a = j.axes || {};
+  const veto = (j.verdict || "").startsWith("VETO");
+  const tone = j.total >= 13 && !veto ? "hi" : "";
+  return `<article class="job">
+    <div class="score ${tone}" title="fit ${a.fit} + competition ${a.competition} + rate ${a.rate} + client ${a.client}">${j.total}/20</div>
+    <div>
+      <p class="title"><a href="${esc(j.url)}" target="_blank" rel="noopener">${esc(j.title)}</a></p>
+      <div class="meta">${esc(j.client)} · ${esc(j.rate)} · ${esc(j.proposals || "")} · added ${esc(j.added)}</div>
+      <div class="chips">
+        <span class="chip ${veto ? "pen" : "lane"}">${esc(j.verdict)}</span>
+        <span class="chip">fit ${a.fit}</span><span class="chip">competition ${a.competition}</span>
+        <span class="chip">rate ${a.rate}</span><span class="chip">client ${a.client}</span>
+        ${j.max_connects ? `<span class="chip pen">only if ≤ ${j.max_connects} Connects</span>` : ""}
+        ${(j.risks || []).map(r => `<span class="chip pen">− ${esc(r)}</span>`).join("")}
+      </div>
+      <details open><summary>Why · bid</summary><div>${esc(j.why)}</div>${j.bid ? `<div><b>Bid:</b> ${esc(j.bid)}</div>` : ""}</details>
+      ${actions(j)}
+    </div></article>`;
+}
+
+function card(j) {
+  if (j.upwork) return upworkCard(j);
+  if (j.gone) return `<article class="job"><div class="score">–</div><div>
+    <p class="title"><a href="${esc(j.url)}" target="_blank" rel="noopener">${esc(j.title)}</a></p>
+    <div class="meta">${esc(j.company)} · no longer in the feeds</div>${actions(j)}</div></article>`;
+  const b = j.breakdown || {};
+  const payChip = j.pay_brl_month
+    ? `<span class="chip ${j.pay_brl_month[1] >= DATA.floor ? "pay-ok" : "pen"}">≈${DATA.cur || ""}${(j.pay_brl_month[0] / 1000).toFixed(1)}K–${(j.pay_brl_month[1] / 1000).toFixed(1)}K/month</span>`
+    : `<span class="chip">pay not posted</span>`;
+  return `<article class="job">
+    <div class="score ${j.score >= 70 ? "hi" : ""}" title="lane ${b.lane} + edge ${b.edge} + pay ${b.pay} + fresh ${b.fresh} + seniority ${b.senior} ${b.penalty >= 0 ? "+" : ""}${b.penalty}">${j.score}</div>
+    <div>
+      <p class="title"><a href="${esc(j.url)}" target="_blank" rel="noopener">${esc(j.title)}</a></p>
+      <div class="meta">${esc(j.company || "?")} · ${esc(j.location || "location n/a")} · ${ago(j.published)} · ${esc(j.source)}</div>
+      <div class="chips">
+        ${j.first_seen === today && !j.status ? `<span class="chip new">NEW</span>` : ""}
+        <span class="chip lane">${esc(j.lane)} · ${esc(j.lane_name)}</span>
+        ${j.br ? `<span class="chip lane">🇧🇷 BR</span>` : ""}
+        <span class="chip">${esc(j.industry)}</span><span class="chip">${esc(j.kind)}</span>${payChip}
+        ${(j.edges || []).map(e => `<span class="chip">+ ${esc(e)}</span>`).join("")}
+        ${(j.flags || []).map(f => `<span class="chip pen">− ${esc(f)}</span>`).join("")}
+      </div>
+      <details><summary>Lead with · gap</summary>
+        <ul>${(j.lead_with || []).map(l => `<li>${esc(l)}</li>`).join("")}</ul>
+        <div class="gap"><b>Gap:</b> ${esc(j.gap?.[0])}. <i>${esc(j.gap?.[1])}</i></div>
+      </details>
+      ${actions(j)}
+    </div></article>`;
+}
+
+function actions(j) {
+  return `<div class="actions">
+    <a class="btn primary" href="${esc(j.url)}" target="_blank" rel="noopener">${j.url_is_search ? "Find on Upwork ↗" : "Open & apply ↗"}</a>
+    ${ACTIONS.map(([s, label]) => `<button class="btn" data-key="${esc(j.key)}" data-status="${s}" aria-pressed="${j.status === s}">${label}</button>`).join("")}
+    ${j.status ? `<span class="status">${esc(j.status)} · ${esc(j.status_date || "")}</span>` : ""}
+  </div>`;
+}
+
+function render() {
+  const counts = Object.fromEntries(TABS.map(([t]) => [t, DATA.jobs.filter(j => { const o = tab; tab = t; const r = inTab(j); tab = o; return r; }).length]));
+  $("tabs").innerHTML = TABS.map(([t, l]) => `<button class="tab" data-tab="${t}" aria-pressed="${t === tab}">${l} ${counts[t]}</button>`).join("");
+  const rows = filtered();
+  $("count").textContent = `${rows.length} job${rows.length === 1 ? "" : "s"}`;
+  $("list").innerHTML = rows.length ? rows.map(card).join("") : `<div class="empty">Nothing here.</div>`;
+}
+
+function fillSelect(id, values) {
+  const sel = $(id), first = sel.options[0].outerHTML;
+  sel.innerHTML = first + [...new Set(values.filter(Boolean))].sort().map(v => `<option>${esc(v)}</option>`).join("");
+}
+
+async function load() {
+  DATA = await (await fetch("/api/jobs")).json();
+  const st = DATA.stats || {};
+  $("sub").textContent = DATA.updated
+    ? `Updated ${new Date(DATA.updated).toLocaleString()} · fetched ${st.fetched} from ${Object.keys(st.sources || {}).length} sources · ${st.laned} fit your lanes · pay range ${DATA.cur || ""}${DATA.floor / 1000}K–${DATA.target / 1000}K/month · remote only`
+    : "No data yet. Run ./bin/sonar --refresh";
+  fillSelect("industry", DATA.jobs.map(j => j.industry));
+  fillSelect("source", DATA.jobs.map(j => j.source));
+  render();
+}
+
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-tab]");
+  if (t) { tab = t.dataset.tab; return render(); }
+  const b = e.target.closest("[data-status]");
+  if (!b) return;
+  const j = DATA.jobs.find(x => x.key === b.dataset.key);
+  const status = j.status === b.dataset.status ? "" : b.dataset.status;  // click again to undo
+  const r = await fetch("/api/status", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key: j.key, status, title: j.title, company: j.company, url: j.url }) });
+  if (r.ok) { j.status = status; j.status_date = status ? today : null; render(); }
+  else alert("Could not save: " + await r.text());
+});
+["q", "lane", "industry", "kind", "pay", "source", "track", "sort"].forEach(id => $(id).addEventListener("input", render));
+load();
+</script>
+</body>
+</html>

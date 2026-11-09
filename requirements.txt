@@ -1,0 +1,6 @@
+requests
+faster-whisper
+sounddevice
+numpy
+anthropic
+pyyaml

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Sniper job finder — writes out/YYYY-MM-DD.md
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+exec "$DIR/.venv/bin/python" "$DIR/jobs/finder.py" "$@"

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Job sonar — local page over every job the finder kept (http://127.0.0.1:8770)
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+exec "$DIR/.venv/bin/python" "$DIR/jobs/sonar.py" "$@"

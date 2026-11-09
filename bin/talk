@@ -1,0 +1,4 @@
+#!/bin/sh
+# Voice interview coach — `talk`, or `talk --review`
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+exec "$DIR/.venv/bin/python" "$DIR/talk/coach.py" "$@"

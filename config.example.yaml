@@ -1,0 +1,109 @@
+# Copy to config.yaml (git-ignored) and replace every <PLACEHOLDER>.
+# Nothing in this file is real: it only shows the shape the code expects.
+
+candidate:
+  name: "<YOUR NAME>"
+  # Closing line of every draft letter (where you work from + languages).
+  location_line: "I work remotely from <YOUR CITY>. <LANGUAGES LINE, e.g. 'Portuguese is native and my English is fluent.'>"
+  # Optional sentence added to letters for jobs in one industry (e.g. why you left it). Leave empty to skip.
+  industry_note:
+    industry: "iGaming / betting"
+    text: ""
+  # Files used as the ONLY source of facts when an LLM drafts letters / coaching answers (kept out of git).
+  profile_file: "profile/PROFILE.md"
+  rules_file: "profile/RULES.md"
+
+pay:
+  # Amounts are monthly, in your home currency (the code calls it BRL; FX below converts posted salaries).
+  floor_month: 0            # <PAY FLOOR> below this a job is dropped / scores 0 on pay
+  target_month: 0           # <PAY TARGET> top of your range
+  agency_floor_month: 0     # <AGENCY FLOOR> optional lower floor for agency roles
+  currency_symbol: "R$"
+  usd_per_home_currency: 0.18   # env JOBHUNT_USD_PER_BRL overrides
+
+location:
+  # Regex for the metro area where hybrid/on-site roles are still acceptable. Default: nowhere.
+  hybrid_ok_regex: ""   # <YOUR METRO AREA REGEX>, e.g. "my city|neighbouring town"
+
+# Industries you have worked in get an "edge" (names must match INDUSTRIES in jobs/finder.py).
+worked_industries:
+  - "E-commerce / DTC"
+
+# Proofs: the facts the finder suggests you "lead with" for each job. Write only true statements.
+#   id, lanes (A, C, AC, D), edges (edge names from jobs/finder.py), keywords (regex over the posting),
+#   line (report bullet), sentence (first-person letter sentence).
+proofs:
+  - id: scale
+    lanes: [A, AC]
+    edges: []
+    keywords: "budget|spend|scale|meta|facebook|tiktok"
+    line: "<COMPANY>: <BUDGET SCOPE> across <CHANNELS>, hands-on in the accounts."
+    sentence: "At <COMPANY> I ran <BUDGET SCOPE> across <CHANNELS>."
+  - id: event
+    lanes: [A, AC]
+    edges: []
+    keywords: "optimi[sz]|conversion|quality|\\bcac\\b|\\bcpa\\b|roas|ltv"
+    line: "Optimizes to the event that pays, not the cheap one."
+    sentence: "I optimize to the event that pays, not the cheap one."
+  - id: tracking
+    lanes: [A, AC, D]
+    edges: ["Conversions API / server-side", "GA4 / GTM"]
+    keywords: "tracking|pixel|attribution|measurement|server|\\bga4\\b|\\bgtm\\b"
+    line: "Owns tracking end to end: GA4 + GTM on the site, pixel + Conversions API on the platform."
+    sentence: "I set up tracking on both sides, site and ad platform, and debug the event code myself."
+  - id: lifecycle
+    lanes: [C, AC, D]
+    edges: ["Lifecycle / loyalty / CRM tool"]
+    keywords: "crm|lifecycle|loyalty|\\bvip\\b|retention|klaviyo|braze|gamif"
+    line: "<CRM / LIFECYCLE PROOF>"
+    sentence: "<CRM / LIFECYCLE PROOF, first person>"
+  - id: automation
+    lanes: [D]
+    edges: ["AI agents / automation"]
+    keywords: "\\bai\\b|agent|automation|llm|claude"
+    line: "<AI / AUTOMATION PROOF>"
+    sentence: "<AI / AUTOMATION PROOF, first person>"
+
+# Proof ids used only when the job's industry matches (e.g. industry-specific KPIs or regulation).
+industry_only_proofs:
+  industry: "iGaming / betting"
+  ids: []
+  replaces: []        # proof ids skipped for that industry (a more specific proof is used instead)
+
+# Honest answers to common gaps: first matching regex wins. dev_gaps are checked first for lane D.
+gaps:
+  - regex: "programmatic|\\bdsp\\b|\\bctv\\b|trade desk"
+    name: "Programmatic/DSP"
+    answer: "I don't have programmatic or DSP experience. <WHAT YOU DO HAVE>."
+  - regex: "\\bb2b\\b|saas"
+    name: "B2B SaaS"
+    answer: "I haven't worked in B2B SaaS. <CLOSEST MATCH>."
+dev_gaps:
+  - regex: "\\b(?:aws|gcp|azure|kubernetes|terraform)\\b"
+    name: "Cloud infrastructure"
+    answer: "<YOUR HONEST ANSWER ABOUT CLOUD DEPTH>"
+default_prep:
+  dev: "Prep anyway: walk through one system you built end to end."
+  other: "Prep anyway: walk through one account end to end, from tracking setup to the weekly budget call."
+
+# Letter rules: any digit in a draft must match one of these (your approved scope numbers, written exactly
+# as they appear in your proofs). Numeric results (%, x, ROAS...) are always rejected.
+allowed_numbers:
+  - "\\bGA4\\b"
+  - "\\b20\\d\\d\\b"
+  - "B2B"
+  - "D2C"
+banned_phrases: ["passionate", "proven track record", "data-driven", "results-oriented"]
+
+lane_openers:
+  AC: "I run paid media and CRM in the same seat."
+  A: "I'm a senior media buyer."
+  C: "I build CRM and lifecycle programs, and I run the paid media that feeds them."
+  D: "I'm a marketer who builds software for marketing and CRM."
+
+# Voice coach persona line (talk/coach.py)
+coach:
+  persona: "a senior marketer interviewing in English"
+
+llm:
+  model: "claude-sonnet-5-5"   # env JOBHUNT_MODEL / TALK_CLAUDE_MODEL override

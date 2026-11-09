@@ -1,0 +1,21 @@
+# secrets and personal config
+.env
+.env.*
+config.yaml
+profile/
+
+# runtime data and outputs (seen jobs, sonar page data, applications, practice logs)
+data/*
+!data/watchlist.example.json
+out/
+outputs/
+practice/
+*.xlsx
+*.csv
+!tests/fixtures/**/*.csv
+
+# python
+.venv/
+__pycache__/
+.pytest_cache/
+*.backup*
